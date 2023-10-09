@@ -2,31 +2,35 @@ package main
 
 import (
 	"context"
-	"github.com/gin-gonic/gin"
+	"errors"
 	"log"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
-	engine *gin.Engine
-
 	srv *http.Server
+
+	engine *gin.Engine
 }
 
 func NewServer() *Server {
+	engine := gin.Default()
 	return &Server{
-		engine: gin.Default(),
+		engine: engine,
 		srv: &http.Server{
-			Addr: "127.0.0.1:8080",
+			Addr:    ":8080",
+			Handler: engine,
 		},
 	}
 }
 
 func (server *Server) Start() error {
-	routerGroup := server.engine.Group("/groum")
-	server.setupApis(routerGroup)
+	group := server.engine.Group("/gorum")
+	server.setupApis(group)
 
-	if err := server.srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+	if err := server.srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 		log.Fatalf("listen: %s\n", err)
 		return err
 	}
